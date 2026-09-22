@@ -1,6 +1,8 @@
 package com.orderflow.repository;
 
 import com.orderflow.entity.DeadLetterQueue;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +15,7 @@ public interface DeadLetterQueueRepository extends JpaRepository<DeadLetterQueue
     Optional<DeadLetterQueue> findByOrderNumber(String orderNumber);
 
     List<DeadLetterQueue> findAllByOrderByFailedAtDesc();
+
+    Page<DeadLetterQueue> findAllByOrderByFailedAtDesc(Pageable pageable);
 }
+

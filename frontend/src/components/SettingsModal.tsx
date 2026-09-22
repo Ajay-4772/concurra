@@ -83,6 +83,29 @@ export function SettingsModal({
             </div>
           </div>
 
+          {/* Reset Demo State Button */}
+          <div className="pt-2 border-t border-[#2a2a2a] flex items-center justify-between">
+            <div>
+              <div className="font-medium text-zinc-300">Reset Demo Environment</div>
+              <div className="text-[11px] text-zinc-500">Restore inventory stock &amp; clear test data</div>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const axios = (await import('axios')).default;
+                  await axios.post('/api/demo/reset');
+                  alert('Demo state reset successfully! Initial inventory restored.');
+                } catch {
+                  alert('Failed to reset demo state.');
+                }
+              }}
+              className="px-3 py-1.5 rounded-md border border-rose-900 bg-rose-950/40 text-rose-400 hover:bg-rose-900/60 font-mono text-[11px] transition"
+            >
+              Reset State
+            </button>
+          </div>
+
           <div className="pt-2 flex justify-end">
             <button
               onClick={onClose}

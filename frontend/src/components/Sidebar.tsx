@@ -64,7 +64,7 @@ export function Sidebar({
                 <CircleDot className="h-3.5 w-3.5" />
               </div>
               <span className="font-semibold text-xs tracking-wider font-mono">
-                ORDERFLOW
+                CONCURRA
               </span>
             </div>
           ) : (
