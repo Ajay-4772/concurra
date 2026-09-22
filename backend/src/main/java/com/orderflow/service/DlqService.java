@@ -60,6 +60,9 @@ public class DlqService {
         // Reset status to PENDING, retryCount to 0
         order.setStatus(OrderStatus.PENDING);
         order.setRetryCount(0);
+        if (order.getCustomerId() != null && order.getCustomerId().startsWith("FAULT_TEST")) {
+            order.setCustomerId(order.getCustomerId().replace("FAULT_TEST", "RECOVERED"));
+        }
         order = orderRepository.save(order);
 
         log.info("Retrying order {} from DLQ. Re-queued for execution.", order.getOrderNumber());

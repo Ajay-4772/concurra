@@ -112,8 +112,9 @@ export function DashboardView() {
 
       eventSource.addEventListener('ORDER_EVENT', (e: MessageEvent) => {
         const data = JSON.parse(e.data);
+        const detailText = data.details || (data.totalAmount != null ? `Created with total $${data.totalAmount}` : 'State transition registered');
         setLiveEvents((prev) => [
-          { id: 'ev-' + Date.now() + Math.random(), timestamp: new Date().toLocaleTimeString(), type: data.type, details: `Order ${data.orderNumber}: ${data.details}` },
+          { id: 'ev-' + Date.now() + Math.random(), timestamp: new Date().toLocaleTimeString(), type: data.type, details: `Order ${data.orderNumber}: ${detailText}` },
           ...prev.slice(0, 30),
         ]);
         fetchData();

@@ -81,6 +81,10 @@ public class OrderProcessor {
         log.info("[{}] Processing order {} (Retry {})", Thread.currentThread().getName(), order.getOrderNumber(), order.getRetryCount());
 
         try {
+            if (order.getCustomerId() != null && order.getCustomerId().startsWith("FAULT_TEST")) {
+                throw new RuntimeException("Simulated upstream payment gateway timeout (HTTP 504 Gateway Timeout)");
+            }
+
             List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
             boolean allReserved = true;
 

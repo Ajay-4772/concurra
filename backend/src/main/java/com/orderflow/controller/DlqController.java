@@ -20,15 +20,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class DlqController {
 
     private final DlqService dlqService;
+    private final com.orderflow.service.OrderService orderService;
 
-    public DlqController(DlqService dlqService) {
+    public DlqController(DlqService dlqService, com.orderflow.service.OrderService orderService) {
         this.dlqService = dlqService;
+        this.orderService = orderService;
     }
 
     @GetMapping
     public ResponseEntity<Page<DeadLetterResponse>> getDeadLetters(
             @PageableDefault(size = 20, sort = "failedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<DeadLetterResponse> response = dlqService.getDeadLetters(pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/simulate")
+    public ResponseEntity<OrderResponse> simulateFault() {
+        com.orderflow.dto.CreateOrderRequest req = new com.orderflow.dto.CreateOrderRequest(
+                "FAULT_TEST-" + java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase(),
+                java.util.List.of(new com.orderflow.dto.OrderItemRequest(3L, 1))
+        );
+        OrderResponse response = orderService.createOrder(req, "IDEM-FAULT-" + java.util.UUID.randomUUID());
         return ResponseEntity.ok(response);
     }
 

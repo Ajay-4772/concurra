@@ -4,7 +4,8 @@ import {
   X,
   Inbox,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';
 
@@ -21,6 +22,7 @@ interface DeadLetterItem {
 export function DlqView() {
   const [dlqRecords, setDlqRecords] = useState<DeadLetterItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [simulating, setSimulating] = useState<boolean>(false);
   const [actionDoneMessage, setActionDoneMessage] = useState<string | null>(null);
 
   const [confirmAction, setConfirmAction] = useState<{
@@ -45,6 +47,24 @@ export function DlqView() {
   useEffect(() => {
     fetchDlq();
   }, []);
+
+  const handleSimulateFault = async () => {
+    try {
+      setSimulating(true);
+      setActionDoneMessage('Dispatched test order with transient gateway fault. Running 3 exponential backoff retries...');
+      await axios.post('/api/dlq/simulate');
+      // Wait for the 3 retries (50ms + 100ms + 200ms + DB commits) to exhaust
+      setTimeout(() => {
+        fetchDlq();
+        setSimulating(false);
+        setActionDoneMessage('Order exhausted 3 retries and safely quarantined into Dead Letter Queue!');
+        setTimeout(() => setActionDoneMessage(null), 5000);
+      }, 1200);
+    } catch (err: any) {
+      setActionDoneMessage(`Failed to trigger simulated fault: ${err.message}`);
+      setSimulating(false);
+    }
+  };
 
   const handleConfirm = async () => {
     if (!confirmAction) return;
@@ -77,14 +97,24 @@ export function DlqView() {
             Orders requiring diagnostic review after exhausting 3 retry attempts on transient faults
           </p>
         </div>
-        <button
-          onClick={fetchDlq}
-          disabled={loading}
-          className="px-3 py-1.5 rounded-md border border-[#2e2e2e] text-xs font-mono text-zinc-300 hover:text-white flex items-center space-x-1.5"
-        >
-          <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleSimulateFault}
+            disabled={simulating}
+            className="px-3 py-1.5 rounded-md bg-rose-950/40 border border-rose-800/60 text-xs font-mono text-rose-300 hover:text-rose-100 hover:bg-rose-900/50 flex items-center space-x-1.5 transition-colors"
+          >
+            <AlertTriangle className={`h-3 w-3 ${simulating ? 'animate-spin text-rose-400' : 'text-rose-400'}`} />
+            <span>{simulating ? 'Simulating Retries...' : '⚡ Simulate Fault Order'}</span>
+          </button>
+          <button
+            onClick={fetchDlq}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-md border border-[#2e2e2e] text-xs font-mono text-zinc-300 hover:text-white flex items-center space-x-1.5"
+          >
+            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {actionDoneMessage && (
